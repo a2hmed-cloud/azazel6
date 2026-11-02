@@ -28,7 +28,7 @@ jobs:
       - run: python -m pip install -r tools/requirements-android-test.txt
       - name: Enable KVM for the Android virtual device
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=/dev/kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Exercise Vulkan, input and lifecycle on Android
@@ -39,7 +39,10 @@ jobs:
           arch: x86_64
           profile: pixel_5
           emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim -memory 3072 -cores 2
-          script: python tools/android_runtime_smoke.py --serial emulator-5554 --apk local/android-host-x86_64/azazel6-host-probe.apk --output local/android-runtime/ci
+          script: |
+            adb shell settings put system accelerometer_rotation 0
+            adb shell settings put system user_rotation 1
+            python tools/android_runtime_smoke.py --serial emulator-5554 --apk local/android-host-x86_64/azazel6-host-probe.apk --output local/android-runtime/ci
       - name: Retain synthetic runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
